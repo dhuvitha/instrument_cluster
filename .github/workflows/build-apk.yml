@@ -1,6 +1,6 @@
 name: Build APK
 
-on: 
+on:
   push:
     branches:
       - main
@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # Optional to prevent timeouts
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -24,16 +24,21 @@ jobs:
         env:
           ANDROID_HOME: $HOME/.buildozer/android/platform/android-sdk
         run: |
-          mkdir -p $ANDROID_HOME
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          
+          # Download and extract Android SDK Command Line Tools
           curl -o android-sdk.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-          unzip -q android-sdk.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          unzip -q android-sdk.zip -d $ANDROID_HOME/cmdline-tools/temp
+
+          # Move the extracted files properly
+          mv $ANDROID_HOME/cmdline-tools/temp/cmdline-tools/* $ANDROID_HOME/cmdline-tools/
+          rm -rf $ANDROID_HOME/cmdline-tools/temp
 
           # Accept all licenses
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --licenses
 
-          # Install build-tools 35 and platform tools
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;35.0.0" "platform-tools"
+          # Install the required build tools and platform tools
+          $ANDROID_HOME/cmdline-tools/bin/sdkmanager "build-tools;35.0.0" "platform-tools"
 
       - name: Build APK
         run: buildozer android debug
@@ -43,6 +48,7 @@ jobs:
         with:
           name: app-debug.apk
           path: bin/*.apk
+
 
 
 
