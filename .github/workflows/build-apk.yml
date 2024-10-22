@@ -3,7 +3,7 @@ name: Build APK
 on: 
   push:
     branches:
-      - main  # Adjust if needed for other branches
+      - main
 
 jobs:
   build:
@@ -12,25 +12,37 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Updated to use the latest version
+        uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip openjdk-11-jdk
+          sudo apt install -y python3-pip openjdk-11-jdk unzip
           pip install buildozer cython
 
-      - name: Debug - List Files
-        run: ls -R
+      - name: Install Android SDK and Build-Tools
+        env:
+          ANDROID_HOME: $HOME/.buildozer/android/platform/android-sdk
+        run: |
+          mkdir -p $ANDROID_HOME
+          curl -o android-sdk.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+          unzip -q android-sdk.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+
+          # Accept all licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+          # Install build-tools 35 and platform tools
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;35.0.0" "platform-tools"
 
       - name: Build APK
-        run: |
-          buildozer android debug
+        run: buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: app-debug.apk
           path: bin/*.apk
+
 
 
