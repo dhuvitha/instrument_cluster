@@ -1,0 +1,27 @@
+name: Build APK
+
+on: [push]  # This triggers the workflow whenever you push code
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Runs the workflow on an Ubuntu Linux machine
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3  # Pulls the latest code from your repo
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip build-essential zip
+        pip install buildozer
+
+    - name: Build APK with Buildozer
+      run: |
+        buildozer android debug  # This generates the APK
+
+    - name: Upload APK as artifact
+      uses: actions/upload-artifact@v3  # Uploads the APK for download
+      with:
+        name: my-app.apk  # Name of the artifact
+        path: bin/*.apk  # Path to the APK file in the Buildozer output directory
