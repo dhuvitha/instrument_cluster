@@ -1,53 +1,38 @@
 name: Build APK
 
-on:
+on: 
   push:
     branches:
-      - main
+      - main  # Adjust if needed for other branches
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 30  # Optional to prevent timeouts
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Updated to use the latest version
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip openjdk-11-jdk unzip
+          sudo apt install -y python3-pip openjdk-11-jdk
           pip install buildozer cython
 
-      - name: Install Android SDK and Build-Tools
-        env:
-          ANDROID_HOME: $HOME/.buildozer/android/platform/android-sdk
-        run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          
-          # Download and extract Android SDK Command Line Tools
-          curl -o android-sdk.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-          unzip -q android-sdk.zip -d $ANDROID_HOME/cmdline-tools/temp
-
-          # Move the extracted files properly
-          mv $ANDROID_HOME/cmdline-tools/temp/cmdline-tools/* $ANDROID_HOME/cmdline-tools/
-          rm -rf $ANDROID_HOME/cmdline-tools/temp
-
-          # Accept all licenses
-          yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --licenses
-
-          # Install the required build tools and platform tools
-          $ANDROID_HOME/cmdline-tools/bin/sdkmanager "build-tools;35.0.0" "platform-tools"
+      - name: Debug - List Files
+        run: ls -R
 
       - name: Build APK
-        run: buildozer android debug
+        run: |
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: app-debug.apk
           path: bin/*.apk
+
 
 
 
